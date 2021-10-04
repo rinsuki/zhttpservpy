@@ -54,8 +54,9 @@ class ZHTTPRequestHandler(BaseHTTPRequestHandler):
                     mimetype = "text/plain"
                 if start_pos is not None:
                     self.send_response(206)
-                    d = pf.read(start_pos + min(read_length, 1024 * 1024))
-                    self.send_header("Content-Range", f"bytes {0}-{len(d)-1}/{pi.file_size}")
+                    pf.seek(start_pos)
+                    d = pf.read(min(read_length, 1024 * 1024))
+                    self.send_header("Content-Range", f"bytes {start_pos}-{start_pos + len(d)-1}/{pi.file_size}")
                     self.send_header("Content-Type", mimetype)
                     self.end_headers()
                     self.wfile.write(d)
