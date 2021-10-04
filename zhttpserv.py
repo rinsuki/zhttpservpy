@@ -36,7 +36,14 @@ class ZHTTPRequestHandler(BaseHTTPRequestHandler):
             self.wfile.write(out.encode("UTF-8"))
             return
         elif p.is_file():
+            try:
             pi = zf.getinfo(self.path[1:])
+            except KeyError:
+                self.send_response(404)
+                self.send_header("Content-Type", "text/plain")
+                self.end_headers()
+                self.wfile.write(b"Not Found\n")
+                return
             with p.open("rb") as pf:
                 start_pos = None
                 read_length = None
