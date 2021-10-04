@@ -8,7 +8,9 @@ import argparse
 parser = argparse.ArgumentParser(description="Host zip file as DocumentRoot of http server.")
 parser.add_argument("zipfile", metavar="<file.zip>")
 parser.add_argument("-p", "--port", dest="port", type=int, default=8082)
+parser.add_argument("--cors", dest="enable_cors", default=False, action='store_true')
 args = parser.parse_args()
+print(args)
 
 zf = zipfile.ZipFile(args.zipfile)
 zfp = zipfile.Path(zf)
@@ -16,6 +18,11 @@ zfp = zipfile.Path(zf)
 RANGE_BYTES_REGEX = re.compile(r"^bytes=([0-9]+)-([0-9]+)?$")
 
 class ZHTTPRequestHandler(BaseHTTPRequestHandler):
+    def send_response(self, *a):
+        super().send_response(*a)
+        if args.enable_cors:
+            self.send_header("Access-Control-Allow-Origin", "*")
+
     def do_GET(self):
         p = zfp / self.path[1:]
         if p.is_dir():
@@ -37,7 +44,7 @@ class ZHTTPRequestHandler(BaseHTTPRequestHandler):
             return
         elif p.is_file():
             try:
-            pi = zf.getinfo(self.path[1:])
+                pi = zf.getinfo(self.path[1:])
             except KeyError:
                 self.send_response(404)
                 self.send_header("Content-Type", "text/plain")
